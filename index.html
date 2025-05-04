@@ -15,26 +15,63 @@
     <p class="mb-6 text-gray-300 max-w-lg mx-auto">
       Javanese is a Monad powered anime character in a hoodie, cap, and headphones. One of 333 unique styles ready to go onchain.
     </p>
-    <button onclick="connectWallet()" id="connectBtn" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-bold">
+    <button onclick="connectOrMint()" id="mintBtn" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-bold transition duration-300">
       Connect Wallet
     </button>
     <p id="walletStatus" class="text-sm mt-4 text-green-400"></p>
+    <div id="mintSuccess" class="hidden text-xl font-bold text-green-400 mt-6 animate-bounce">
+      🎉 Congratulations! You successfully minted your Javanese NFT!
+    </div>
   </div>
 
   <script>
+    let provider, signer, address, contract;
+    const contractAddress = "0x695343E161DC19274062d42dE89e81FeD280E449";
+    const contractABI = [
+      "function mint(address to, uint256 amount) external payable",
+      "function balanceOf(address owner) view returns (uint256)"
+    ];
+
+    async function connectOrMint() {
+      if (!signer) {
+        await connectWallet();
+      } else {
+        await mintNFT();
+      }
+    }
+
     async function connectWallet() {
       if (window.ethereum) {
         try {
-          const provider = new ethers.providers.Web3Provider(window.ethereum)
+          provider = new ethers.providers.Web3Provider(window.ethereum)
           await provider.send("eth_requestAccounts", [])
-          const signer = provider.getSigner()
-          const address = await signer.getAddress()
+          signer = provider.getSigner()
+          address = await signer.getAddress()
           document.getElementById('walletStatus').innerText = "Connected: " + address
+          document.getElementById('mintBtn').innerText = "Mint NFT"
         } catch (err) {
           alert("Connection rejected!")
         }
       } else {
         alert("Wallet not found. Please install MetaMask, Phantom (EVM), or Backpack.")
+      }
+    }
+
+    async function mintNFT() {
+      try {
+        contract = new ethers.Contract(contractAddress, contractABI, signer);
+        const balance = await contract.balanceOf(address);
+        if (balance.toString() !== "0") {
+          alert("You already minted.");
+          return;
+        }
+        const tx = await contract.mint(address, 1, { value: ethers.utils.parseEther("1.0") });
+        await tx.wait();
+        document.getElementById('mintSuccess').classList.remove('hidden');
+        document.getElementById('mintBtn').disabled = true;
+      } catch (err) {
+        console.error(err);
+        alert("Mint failed. Check console for details.");
       }
     }
   </script>
