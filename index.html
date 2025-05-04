@@ -2,63 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Javanese Mint</title>
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-  <style>
-    body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; padding: 50px; }
-    button { padding: 10px 20px; font-size: 16px; background: #7c3aed; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    button:disabled { background: gray; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mint Javanese NFT</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
-  <h1>Mint Your Javanese NFT</h1>
-  <p>Price: <strong>1 MON</strong></p>
-  <button id="mintButton">Connect Wallet</button>
-  <p id="status"></p>
-
-  <script>
-    const contractAddress = "0x695343E161DC19274062d24de89e81fed280e449";
-    const abi = [
-      "function mint(address to, uint256 amount) external",
-      "function balanceOf(address owner) view returns (uint256)"
-    ];
-
-    const price = ethers.utils.parseEther("1.0");
-    const mintAmount = 1;
-
-    let signer, contract;
-
-    const button = document.getElementById("mintButton");
-    const status = document.getElementById("status");
-
-    button.onclick = async () => {
-      if (!window.ethereum) return alert("Install MetaMask!");
-
-      const provider = new ethers.providers.Web3Provider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = provider.getSigner();
-
-      const userAddress = await signer.getAddress();
-      contract = new ethers.Contract(contractAddress, abi, signer);
-
-      const alreadyMinted = await contract.balanceOf(userAddress);
-      if (alreadyMinted.toString() !== "0") {
-        status.innerText = "❌ You already minted.";
-        button.disabled = true;
-        return;
-      }
-
-      try {
-        status.innerText = "⏳ Minting...";
-        const tx = await contract.mint(userAddress, mintAmount, { value: price });
-        await tx.wait();
-        status.innerText = "✅ Mint success!";
-        button.disabled = true;
-      } catch (e) {
-        console.error(e);
-        status.innerText = "❌ Transaction failed.";
-      }
-    };
-  </script>
+<body class="bg-black text-white flex items-center justify-center min-h-screen">
+  <div class="text-center px-4">
+    <img src="https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeidgwqbngnuwrwfn5ibz76hbhqn64mnpjforojnb5t7mmli6az3fzm" alt="Javanese NFT" class="rounded-xl shadow-lg mb-4 w-full max-w-md mx-auto">
+    <h1 class="text-3xl font-bold mb-2">Mint Your Javanese NFT</h1>
+    <p class="text-purple-400 font-semibold mb-4">Price: <span class="font-bold">1 MON</span></p>
+    <p class="mb-6 text-gray-300 max-w-lg mx-auto">
+      Javanese is a Monad powered anime character in a hoodie, cap, and headphones. One of 333 unique styles ready to go onchain.
+    </p>
+    <button class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-bold">
+      Connect Wallet
+    </button>
+  </div>
 </body>
 </html>
