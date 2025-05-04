@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mint Javanese NFT</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body class="bg-black text-white flex items-center justify-center min-h-screen">
   <div class="text-center px-4">
@@ -14,9 +15,28 @@
     <p class="mb-6 text-gray-300 max-w-lg mx-auto">
       Javanese is a Monad powered anime character in a hoodie, cap, and headphones. One of 333 unique styles ready to go onchain.
     </p>
-    <button class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-bold">
+    <button onclick="connectWallet()" id="connectBtn" class="bg-purple-600 hover:bg-purple-700 px-6 py-2 rounded-lg font-bold">
       Connect Wallet
     </button>
+    <p id="walletStatus" class="text-sm mt-4 text-green-400"></p>
   </div>
+
+  <script>
+    async function connectWallet() {
+      if (window.ethereum) {
+        try {
+          const provider = new ethers.providers.Web3Provider(window.ethereum)
+          await provider.send("eth_requestAccounts", [])
+          const signer = provider.getSigner()
+          const address = await signer.getAddress()
+          document.getElementById('walletStatus').innerText = "Connected: " + address
+        } catch (err) {
+          alert("Connection rejected!")
+        }
+      } else {
+        alert("Wallet not found. Please install MetaMask, Phantom (EVM), or Backpack.")
+      }
+    }
+  </script>
 </body>
 </html>
