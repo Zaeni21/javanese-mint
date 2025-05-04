@@ -11,7 +11,7 @@
   <div class="text-center px-4">
     <img src="https://aqua-glad-tern-369.mypinata.cloud/ipfs/bafybeiabu75wc3bgkdwgrfscqwujpow6ebip2ec6r4b5wxofnqjjockb2y" alt="Javanese NFT" class="rounded-xl shadow-lg mb-4 w-full max-w-md mx-auto">
     <h1 class="text-3xl font-bold mb-2">Mint Your Javanese NFT</h1>
-    <p class="text-purple-400 font-semibold mb-4">Price: <span class="font-bold">1 MON</span></p>
+    <p class="text-purple-400 font-semibold mb-4">Free Mint - 1 per Wallet</p>
     <p class="mb-6 text-gray-300 max-w-lg mx-auto">
       Javanese is a Monad powered anime character in a hoodie, cap, and headphones. One of 333 unique styles ready to go onchain.
     </p>
@@ -28,9 +28,30 @@
     let provider, signer, address, contract;
     const contractAddress = "0x695343E161DC19274062d42dE89e81FeD280E449";
     const contractABI = [
-      "function mint(address to, uint256 amount) external payable",
-      "function balanceOf(address owner) view returns (uint256)"
+      {
+        "inputs": [
+          { "internalType": "address", "name": "to", "type": "address" },
+          { "internalType": "uint256", "name": "amount", "type": "uint256" }
+        ],
+        "name": "mint",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          { "internalType": "address", "name": "owner", "type": "address" }
+        ],
+        "name": "balanceOf",
+        "outputs": [
+          { "internalType": "uint256", "name": "", "type": "uint256" }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+      }
     ];
+
+    const MONAD_CHAIN_ID = 10143;
 
     async function connectOrMint() {
       if (!signer) {
@@ -43,17 +64,46 @@
     async function connectWallet() {
       if (window.ethereum) {
         try {
-          provider = new ethers.providers.Web3Provider(window.ethereum)
-          await provider.send("eth_requestAccounts", [])
-          signer = provider.getSigner()
-          address = await signer.getAddress()
-          document.getElementById('walletStatus').innerText = "Connected: " + address
-          document.getElementById('mintBtn').innerText = "Mint NFT"
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+          await provider.send("eth_requestAccounts", []);
+          signer = provider.getSigner();
+          address = await signer.getAddress();
+
+          const network = await provider.getNetwork();
+          if (network.chainId !== MONAD_CHAIN_ID) {
+            await switchToMonadTestnet();
+            return;
+          }
+
+          document.getElementById('walletStatus').innerText = "Connected: " + address;
+          document.getElementById('mintBtn').innerText = "Mint NFT";
         } catch (err) {
-          alert("Connection rejected!")
+          alert("Connection rejected!");
         }
       } else {
-        alert("Wallet not found. Please install MetaMask, Phantom (EVM), or Backpack.")
+        alert("Wallet not found. Please install MetaMask, Phantom (EVM), or Backpack.");
+      }
+    }
+
+    async function switchToMonadTestnet() {
+      try {
+        await window.ethereum.request({
+          method: 'wallet_addEthereumChain',
+          params: [{
+            chainId: '0x279f', // 10143
+            chainName: 'Monad Tesnet',
+            nativeCurrency: {
+              name: 'MON',
+              symbol: 'MON',
+              decimals: 18
+            },
+            rpcUrls: ['https://testnet-rpc.monad.xyz'],
+            blockExplorerUrls: ['https://testnet.monadexplorer.com']
+          }]
+        });
+        window.location.reload();
+      } catch (switchError) {
+        alert("Please switch to Monad Tesnet manually in your wallet.");
       }
     }
 
@@ -65,7 +115,7 @@
           alert("You already minted.");
           return;
         }
-        const tx = await contract.mint(address, 1, { value: ethers.utils.parseEther("1.0") });
+        const tx = await contract.mint(address, 1);
         await tx.wait();
         document.getElementById('mintSuccess').classList.remove('hidden');
         document.getElementById('mintBtn').disabled = true;
